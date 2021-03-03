@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Chat sd</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web-socket-js/1.0.0/web_socket.js"
+        integrity="sha512-P61hA8M2fuA0NxiHXTb+Ul1znVk0ybLXejE3xWtXJsl6SVG09qnFrw3XgZTBpoysP88jUw9UEVzDwYaRjPkwCw=="
+        crossorigin="anonymous"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #chat {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        input {
+            width: 600px;
+            border: 1px solid #ddd;
+            height: 50px;
+            padding: 0 20px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 600px;
+            height: 50px;
+            font-size: 14px;
+            background: #069;
+            text-align: center;
+            line-height: 50px;
+            font-weight: bold;
+            color: #FFF;
+            margin-top: 10px;
+        }
+
+        .messages {
+            width: 600px;
+            height: 400px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat">
+        <input id="author" type="text" name="username" placeholder="Digite seu usuario">
+        <div class="messages">
+
+        </div>
+        <input id="message" type="text" name="message" placeholder="Digite sua mensagem">
+        <button type="button" onclick="sendData()">Enviar</button>
+    </div>
+
+    <script>
+        var clientsPort = "<%= clientsPort %>";
+        var myPort = "<%= port %>";
+        var port = clientsPort.split(',');
+        var messages = localStorage;
+        var formatoMsg = [];
+        
+        port.splice(port.indexOf(myPort), 1);
+        var minhasConexoes = [];
+
+        for (var i = 0; i < port.length; i++) {
+            var conexao = new WebSocket(`ws://localhost:${port[i]}`, "http");
+            minhasConexoes.push(conexao);
+        }
+
+        const connection = new WebSocket(`ws://localhost:${myPort}`, "http");
+
+        connection.onmessage = event => {
+            console.log(event.data);
+            renderMessage(event.data);
+        }
+
+        function renderMessage(message) {
+            console.log(port);
+            let data = message.split('_separator_');
+            $('.messages').append('<div class="message"><strong>' + data[0] + '</strong>:' + data[1] + '</div>');
+        }
+
+        // if (window.performance.navigation) {
+            
+        //     renderMessage(localStorage.getItem('msgs'));
+        //     // renderMessage(localStorage);
+        // }
+
+        // connection.addEventListener('previousMessage', event => {
+        //     console.log('mensagens do servidor');
+        // });
+        function sendData() {
+            var author = $('#author').val();
+            var message = $('#message').val();
+            if (author.length && message.length) {
+                for (var i = 0; i < port.length; i++) {
+                    // Converter para JSON
+                    // JSON.stringify()
+                    minhasConexoes[i].send(author + '_separator_' + message);
+                }
+                connection.send(author + '_separator_' + message);
+                $('#message').val('');
+            }
+        }
+    </script>
+</body>
+
+</html>
